@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/otiai10/gosseract/v2"
+)
 
 func main() {
-	fmt.Println("iniciando servidor...")
+	client := gosseract.NewClient()
+	defer client.Close()
+
+	fmt.Println("tesseract working appropriately!")
 }
