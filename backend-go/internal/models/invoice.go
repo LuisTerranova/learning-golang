@@ -1,36 +1,31 @@
-// Package models: accomodate structs
+// package models to accomodate models
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type RawInvoice struct {
-	ID        int
-	ImageURL  string
-	Content   string
+	ID        uuid.UUID
+	FileURL   string
+	RawText   string
 	CreatedAt time.Time
 }
 
 type ParsedInvoice struct {
-	RawID         int
+	ID            uuid.UUID
+	RawID         uuid.UUID
+	AccessKey     *string
 	Establishment *string
 	CNPJ          *string
 	Date          *time.Time
 	Total         *float64
-	Itens         []ParsedItem
+	Items         []ParsedItem
 	ParserVersion string
 	IsValid       bool
 	ParseError    *string
-}
-
-type Invoice struct {
-	ID            int
-	RawID         int
-	Establishment string
-	CNPJ          string
-	Date          time.Time
-	Total         float64
-	Itens         []Item
-	CreatedAt     time.Time
 }
 
 type ParsedItem struct {
@@ -40,9 +35,35 @@ type ParsedItem struct {
 	Total     *float64
 }
 
-type Item struct {
-	Name      *string
-	Quantity  *int
-	UnitPrice *float64
-	Total     *float64
+func (p *ParsedInvoice) Validate() {
+	p.IsValid = true
+	p.ParseError = nil
+
+	if p.CNPJ == nil {
+		p.IsValid = false
+		msg := "CNPJ not identified"
+		p.ParseError = &msg
+		return
+	}
+
+	if len(p.Items) == 0 {
+		p.IsValid = false
+		msg := "Invoice items not identified"
+		p.ParseError = &msg
+		return
+	}
+
+	if p.Total == nil || *p.Total <= 0 {
+		p.IsValid = false
+		msg := "Total price not identified"
+		p.ParseError = &msg
+		return
+	}
+
+	if p.Date == nil {
+		p.IsValid = false
+		msg := "Invoice date not identified"
+		p.ParseError = &msg
+		return
+	}
 }

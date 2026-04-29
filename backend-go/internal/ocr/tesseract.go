@@ -1,5 +1,5 @@
-// Package tesseract: definition of the OCR service
-package tesseract
+// Package tesseract: OCR definition
+package ocr
 
 import (
 	"fmt"
@@ -14,7 +14,9 @@ func ExtractText(imagemBytes []byte) (string, error) {
 	defer client.Close()
 
 	// 3. Define language
-	client.SetLanguage("por")
+	if err := client.SetLanguage("por"); err != nil {
+		return "", fmt.Errorf("language 'por' not found: %w", err)
+	}
 
 	// 4. Pass the image
 	err := client.SetImageFromBytes(imagemBytes)
