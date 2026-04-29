@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ocr.v1;
+
+option go_package = "github.com/seu-usuario/invoices-project/backend-go/gen/ocr/v1;ocrv1";
+
+service OCRService {
+  rpc ProcessImage(ImageRequest) returns (OCRResponse);
+}
+
+message ImageRequest {
+  bytes image_data = 1;
+}
+
+message OCRResponse {
+  string text = 1;
+}

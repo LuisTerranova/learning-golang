@@ -1,0 +1,20 @@
+# --- GERADOS PELO BUF ---
+backend-go/gen/
+frontend-avalonia/Generated/
+
+# --- GOLANG (backend-go) ---
+backend-go/bin/
+backend-go/vendor/
+
+# --- .NET / AVALONIA (frontend-avalonia) ---
+**/bin/
+**/obj/
+*.user
+*.suo
+*.sln.dotSettings.user
+frontend-avalonia/.vs/
+
+# --- IDEs & EDITORES ---
+.idea/
+.vscode/
+.netrw*

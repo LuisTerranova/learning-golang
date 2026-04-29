@@ -1,4 +1,4 @@
-module github.com/LuisTerranova/learning-golang
+module github.com/LuisTerranova/invoices-app/backend-go
 
 go 1.22.2
 

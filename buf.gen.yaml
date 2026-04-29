@@ -1,0 +1,15 @@
+version: v1
+plugins:
+  # --- Geração para GO (Backend) ---
+  - plugin: buf.build/protocolbuffers/go
+    out: backend-go/gen
+    opt: paths=source_relative
+  - plugin: buf.build/grpc/go
+    out: backend-go/gen
+    opt: paths=source_relative
+
+  # --- Geração para C# (Avalonia) ---
+  - plugin: buf.build/protocolbuffers/csharp
+    out: frontend-avalonia/Generated
+  - plugin: buf.build/grpc/csharp
+    out: frontend-avalonia/Generated
