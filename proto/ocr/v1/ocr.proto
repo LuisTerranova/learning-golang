@@ -25,7 +25,7 @@ message ReceiptItem {
 message OCRResponse {
   string id = 1;
   string store_name = 2;
-  string cnpj = 3
+  string cnpj = 3;
   string invoice_date = 4;
   repeated ReceiptItem items = 5;
   double grand_total = 6;

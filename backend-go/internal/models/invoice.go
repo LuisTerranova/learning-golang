@@ -9,14 +9,14 @@ import (
 
 type RawInvoice struct {
 	ID        uuid.UUID
-	FileURL   string
-	RawText   string
+	Content   []byte
 	CreatedAt time.Time
 }
 
 type ParsedInvoice struct {
 	ID            uuid.UUID
 	RawID         uuid.UUID
+	RawText       string
 	AccessKey     *string
 	Establishment *string
 	CNPJ          *string
