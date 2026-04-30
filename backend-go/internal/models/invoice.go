@@ -8,24 +8,24 @@ import (
 )
 
 type RawInvoice struct {
-	ID        uuid.UUID
-	Content   []byte
-	CreatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	ImageData []byte    `json:"image_data"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ParsedInvoice struct {
-	ID            uuid.UUID
-	RawID         uuid.UUID
-	RawText       string
-	AccessKey     *string
-	Establishment *string
-	CNPJ          *string
-	Date          *time.Time
-	Total         *float64
-	Items         []ParsedItem
-	ParserVersion string
-	IsValid       bool
-	ParseError    *string
+	ID            uuid.UUID    `json:"id"`
+	RawID         uuid.UUID    `json:"raw_id"`
+	RawText       *string      `json:"raw_text"`
+	AccessKey     *string      `json:"acess_key"`
+	Establishment *string      `json:"establishment"`
+	CNPJ          *string      `json:"cnpj"`
+	Date          *time.Time   `json:"date"`
+	Total         *float64     `json:"total"`
+	Items         []ParsedItem `json:"items"`
+	ParserVersion string       `json:"parser_version"`
+	IsValid       bool         `json:"is_valid"`
+	ParseError    *string      `json:"parse_error"`
 }
 
 type ParsedItem struct {
