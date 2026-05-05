@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using frontend_avalonia.Models;
+using invoices.core.Models;
 
-namespace frontend_avalonia.Services.Abstractions;
+namespace invoices.core.Services.Abstractions;
 
 public interface IInvoiceService
 {

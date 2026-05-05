@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace frontend_avalonia.Models;
+namespace invoices.core.Models;
 
 public class RawInvoice
 {
@@ -11,4 +11,7 @@ public class RawInvoice
     public string FileName { get; set; }
     public byte[] ImageData { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [JsonIgnore]
+    public Invoice? ParsedInvoice { get; set; }
 }

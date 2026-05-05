@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace frontend_avalonia.Models;
+namespace invoices.core.Models;
 
 public class ParsedItem
 {

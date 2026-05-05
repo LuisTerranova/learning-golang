@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace frontend_avalonia.Models;
+namespace invoices.core.Models;
 
 public class Invoice
 {
@@ -11,6 +11,9 @@ public class Invoice
 
     [JsonPropertyName("raw_id")]
     public Guid RawId { get; set; }
+
+    [JsonIgnore]
+    public RawInvoice? RawInvoice { get; set; }
 
     [JsonPropertyName("raw_text")]
     public string? RawText { get; set; }

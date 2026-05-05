@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Threading.Tasks;
 
-namespace frontend_avalonia.Services.Abstractions;
+namespace invoices.core.Services.Abstractions;
 
 public interface IInvoiceConsumer
 {

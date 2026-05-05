@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using frontend_avalonia.Models;
-using frontend_avalonia.Services.Abstractions;
+using invoices.core.Models;
+using invoices.core.Services.Abstractions;
 
-namespace frontend_avalonia.Services.Implementations;
+namespace invoices.api.Services.Implementations;
 
 public class InvoiceService : IInvoiceService
 {

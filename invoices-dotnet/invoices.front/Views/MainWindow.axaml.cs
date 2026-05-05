@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace frontend_avalonia.Views;
+namespace invoices.front.Views;
 
 public partial class MainWindow : Window
 {

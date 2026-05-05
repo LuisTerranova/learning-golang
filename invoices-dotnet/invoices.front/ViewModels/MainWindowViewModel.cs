@@ -1,4 +1,4 @@
-﻿namespace frontend_avalonia.ViewModels;
+namespace invoices.front.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {

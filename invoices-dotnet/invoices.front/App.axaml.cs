@@ -4,10 +4,10 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using frontend_avalonia.ViewModels;
-using frontend_avalonia.Views;
+using invoices.front.ViewModels;
+using invoices.front.Views;
 
-namespace frontend_avalonia;
+namespace invoices.front;
 
 public partial class App : Application
 {
