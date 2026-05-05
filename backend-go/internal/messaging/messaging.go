@@ -22,7 +22,7 @@ func PublishParsedInvoice(ch *amqp.Channel, result models.ParsedInvoice) error {
 
 	return ch.Publish(
 		"",                   // exchange
-		"invoices_processed", // .NET return queue
+		"processed_invoices", // .NET return queue
 		false,
 		false,
 		amqp.Publishing{
