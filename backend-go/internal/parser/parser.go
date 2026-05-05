@@ -11,18 +11,7 @@ import (
 	"github.com/LuisTerranova/invoices-app/backend-go/internal/models"
 )
 
-func Parse(rawText string, rawID uuid.UUID, ocrErr error) models.ParsedInvoice {
-	if ocrErr != nil {
-		errMsg := "Error while extracting text: " + ocrErr.Error()
-		return models.ParsedInvoice{
-			ID:            uuid.New(),
-			RawID:         rawID,
-			IsValid:       false,
-			ParseError:    &errMsg,
-			ParserVersion: "1.0.0",
-		}
-	}
-
+func Parse(rawText string, rawID uuid.UUID) models.ParsedInvoice {
 	text := strings.ToUpper(rawText)
 	lines := strings.Split(text, "\n")
 
