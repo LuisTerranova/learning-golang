@@ -1,6 +1,8 @@
+using invoices.api.Data.Context;
 using invoices.api.Services.Implementations;
 using invoices.core.Models;
 using invoices.core.Services.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace invoices.tests.Services;
@@ -9,6 +11,7 @@ public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly IConfiguration _config;
+    private readonly AppDbContext _db;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -27,7 +30,12 @@ public class AuthServiceTests
             .AddInMemoryCollection(configData)
             .Build();
 
-        _sut = new AuthService(_mockUserRepo.Object, _config);
+        var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        _db = new AppDbContext(dbOptions);
+
+        _sut = new AuthService(_mockUserRepo.Object, _config, _db);
     }
 
     [Fact]

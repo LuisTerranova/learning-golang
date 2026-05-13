@@ -4,19 +4,20 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
+using invoices.core.Services.Abstractions;
 using invoices.front.Services;
 using invoices.front.Services.Abstractions;
 using invoices.front.Services.Implementations;
 using invoices.front.ViewModels;
 using invoices.front.Views;
-using invoices.core.Services.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace invoices.front;
 
 public partial class App : Application
 {
     private ServiceProvider? _provider;
+    private Window? _mainWindow;
 
     public override void Initialize()
     {
@@ -39,11 +40,12 @@ public partial class App : Application
         services.AddSingleton(sp =>
         {
             var handler = sp.GetRequiredService<AuthTokenHandler>();
-            handler.InnerHandler = new HttpClientHandler();
-            return new HttpClient(handler)
+            handler.InnerHandler = new HttpClientHandler
             {
-                BaseAddress = new Uri("http://localhost:5152"),
+                // Ignora erro de certificado autoassinado de desenvolvimento local no ambiente de testes/dev
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
             };
+            return new HttpClient(handler) { BaseAddress = new Uri("https://localhost:7118") };
         });
         services.AddSingleton<AuthTokenHandler>();
 
@@ -56,32 +58,46 @@ public partial class App : Application
 
         _provider = services.BuildServiceProvider();
 
-        var loginVm = _provider.GetRequiredService<LoginViewModel>();
+        ShowLoginWindow(desktop);
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void ShowLoginWindow(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var loginVm = _provider!.GetRequiredService<LoginViewModel>();
         var loginWindow = new LoginWindow { DataContext = loginVm };
 
-        // Keep the app alive until we explicitly switch to OnMainWindowClose
         desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         loginVm.LoginSucceeded += (_, _) =>
         {
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var mainVm = _provider.GetRequiredService<MainWindowViewModel>();
+                var mainVm = _provider!.GetRequiredService<MainWindowViewModel>();
                 var mainWindow = new MainWindow { DataContext = mainVm };
 
-                // Show MainWindow BEFORE closing LoginWindow — if LoginWindow
-                // closes first while it's still desktop.MainWindow and
-                // ShutdownMode is OnMainWindowClose, the process exits.
+                mainVm.LogoutRequested += (_, _) =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                        mainWindow.Close();
+                        _mainWindow = null;
+                        ShowLoginWindow(desktop);
+                    });
+                };
+
                 mainWindow.Show();
                 loginWindow.Close();
 
+                _mainWindow = mainWindow;
                 desktop.MainWindow = mainWindow;
                 desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             });
         };
 
         desktop.MainWindow = loginWindow;
-
-        base.OnFrameworkInitializationCompleted();
+        loginWindow.Show();
     }
 }

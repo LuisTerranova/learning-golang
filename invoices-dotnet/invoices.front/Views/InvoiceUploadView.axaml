@@ -24,7 +24,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:PendingFile">
                         <Border Padding="8,6" Margin="0,0,0,4"
-                                Background="#2A2A3E" CornerRadius="4">
+                                Background="#252538" CornerRadius="4">
                             <Grid ColumnDefinitions="Auto,*,Auto">
                                 <TextBlock Grid.Column="0" Text="&#x1F4C4;" FontSize="20"
                                            VerticalAlignment="Center"/>

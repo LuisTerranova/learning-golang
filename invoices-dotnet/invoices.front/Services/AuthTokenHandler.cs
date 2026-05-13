@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -6,15 +7,41 @@ using invoices.front.Services.Abstractions;
 
 namespace invoices.front.Services;
 
-public class AuthTokenHandler(IAuthClient _authClient) : DelegatingHandler
+public class AuthTokenHandler(IAuthClient authClient) : DelegatingHandler
 {
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken ct
+    )
     {
-        if (_authClient.IsAuthenticated)
+        if (authClient.IsAuthenticated)
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authClient.Token);
+            request.Headers.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                authClient.Token
+            );
         }
 
-        return base.SendAsync(request, ct);
+        var response = await base.SendAsync(request, ct);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized && authClient.IsAuthenticated)
+        {
+            // Try to refresh
+            var success = await authClient.TryRefreshAsync(ct);
+            if (success)
+            {
+                // Update the request with the new token
+                request.Headers.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    authClient.Token
+                );
+                
+                // Retry the request
+                response.Dispose();
+                response = await base.SendAsync(request, ct);
+            }
+        }
+
+        return response;
     }
 }

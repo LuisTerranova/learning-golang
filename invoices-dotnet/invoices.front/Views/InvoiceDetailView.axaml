@@ -95,7 +95,7 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Border Grid.Column="1" Background="#1A1A2E" CornerRadius="6" Padding="12">
+                <Border Grid.Column="1" Background="#1A1A27" CornerRadius="6" Padding="12">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Raw OCR Text" FontSize="16" FontWeight="SemiBold"/>
                         <ScrollViewer MaxHeight="500">

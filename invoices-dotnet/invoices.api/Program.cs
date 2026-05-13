@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,11 +8,38 @@ using invoices.api.Data.Repositories;
 using invoices.api.Services.Implementations;
 using invoices.core.Services.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuração nativa do Kestrel para HTTP (8080) e HTTPS (8081) com certificado gerado em memória
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); // HTTP para healthchecks internos e comunicação base
+    options.ListenAnyIP(
+        8081,
+        listenOptions =>
+        {
+            // Gera um certificado TLS temporário em memória para o desenvolvimento/teste seguro
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(
+                "CN=localhost",
+                rsa,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1
+            );
+            var cert = request.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
+            var exportableCert = X509CertificateLoader.LoadPkcs12(
+                cert.Export(X509ContentType.Pfx, "devpassword"),
+                "devpassword"
+            );
+            listenOptions.UseHttps(exportableCert);
+        }
+    );
+});
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -37,7 +66,9 @@ builder.Services.AddSingleton(sp =>
         }
         catch (Exception) when (i < maxRetries - 1)
         {
-            Console.WriteLine($"RabbitMQ connection attempt {i + 1}/{maxRetries} failed. Retrying in 3s...");
+            Console.WriteLine(
+                $"RabbitMQ connection attempt {i + 1}/{maxRetries} failed. Retrying in 3s..."
+            );
             Thread.Sleep(3000);
         }
     }
@@ -64,7 +95,8 @@ builder.Services.AddHostedService<InvoiceConsumer>();
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = Encoding.UTF8.GetBytes(jwtSection["Key"]!);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -79,15 +111,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Shared JSON options for RabbitMQ consumer & service
-builder.Services.AddSingleton(new JsonSerializerOptions
+// Global authorization: require authenticated user on all endpoints by default
+builder.Services.AddAuthorization(options =>
 {
-    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    var authorizationPolicyBuilder = new AuthorizationPolicyBuilder();
+    authorizationPolicyBuilder.RequireAuthenticatedUser();
+    options.FallbackPolicy = authorizationPolicyBuilder.Build();
 });
 
+// Shared JSON options for RabbitMQ consumer & service
+builder.Services.AddSingleton(
+    new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    }
+);
+
 // Controllers + JSON
-builder.Services.AddControllers()
+builder
+    .Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;

@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using invoices.core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,13 +10,15 @@ public static class SeedData
         if (await db.Users.AnyAsync())
             return;
 
-        db.Users.Add(new User
-        {
-            Username = "admin",
-            Email = "admin@email.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
+        db.Users.Add(
+            new User
+            {
+                Username = "admin",
+                Email = "admin@email.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                CreatedAt = DateTimeOffset.UtcNow,
+            }
+        );
 
         await db.SaveChangesAsync();
     }

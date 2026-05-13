@@ -11,5 +11,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8081
 ENTRYPOINT ["dotnet", "invoices.api.dll"]

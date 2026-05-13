@@ -43,6 +43,7 @@ services:
     restart: always
     ports:
       - "5152:8080"
+      - "7118:8081"
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=invoices_db;Username=postgres;Password=postgrespassword
       - RabbitMQ__HostName=rabbitmq

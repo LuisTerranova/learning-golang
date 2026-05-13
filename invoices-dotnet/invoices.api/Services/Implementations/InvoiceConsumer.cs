@@ -1,23 +1,18 @@
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using invoices.core.Models;
 using invoices.core.Services.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace invoices.api.Services.Implementations;
 
 public class InvoiceConsumer(
-    IConnection _connection,
-    IServiceScopeFactory _scopeFactory,
-    JsonSerializerOptions _jsonOptions,
-    ILogger<InvoiceConsumer> _logger) : BackgroundService, IInvoiceConsumer
+    IConnection connection,
+    IServiceScopeFactory scopeFactory,
+    JsonSerializerOptions jsonOptions,
+    ILogger<InvoiceConsumer> logger
+) : BackgroundService, IInvoiceConsumer
 {
     private readonly string _queueName = "processed_invoices";
     private IChannel? _channel;
@@ -28,7 +23,7 @@ public class InvoiceConsumer(
 
         stoppingToken.Register(() =>
         {
-            _logger.LogInformation("Shutting down InvoiceConsumer...");
+            logger.LogInformation("Shutting down InvoiceConsumer...");
             StopListening();
         });
 
@@ -38,13 +33,13 @@ public class InvoiceConsumer(
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("InvoiceConsumer stopped gracefully.");
+            logger.LogInformation("InvoiceConsumer stopped gracefully.");
         }
     }
 
     public async Task StartListeningAsync()
     {
-        _channel = await _connection.CreateChannelAsync();
+        _channel = await connection.CreateChannelAsync();
 
         await _channel.QueueDeclareAsync(
             queue: _queueName,
@@ -62,31 +57,38 @@ public class InvoiceConsumer(
 
             try
             {
-                var result = JsonSerializer.Deserialize<Invoice>(message, _jsonOptions);
+                var result = JsonSerializer.Deserialize<Invoice>(message, jsonOptions);
 
                 if (result is null)
                 {
-                    _logger.LogWarning("Received message is either null or invalid. DeliveryTag: {DeliveryTag}", ea.DeliveryTag);
+                    logger.LogWarning(
+                        "Received message is either null or invalid. DeliveryTag: {DeliveryTag}",
+                        ea.DeliveryTag
+                    );
                     await _channel.BasicAckAsync(ea.DeliveryTag, false);
                     return;
                 }
 
-                result.Items ??= new();
-                result.ParseErrors ??= new();
+                result.Items ??= [];
+                result.ParseErrors ??= [];
 
-                using (var scope = _scopeFactory.CreateScope())
+                using (var scope = scopeFactory.CreateScope())
                 {
                     var repo = scope.ServiceProvider.GetRequiredService<IInvoiceRepository>();
                     await repo.AddAsync(result, CancellationToken.None);
                     await repo.SaveChangesAsync(CancellationToken.None);
                 }
 
-                _logger.LogInformation("Successfully processed invoice {InvoiceId}.", result.Id);
+                logger.LogInformation("Successfully processed invoice {InvoiceId}.", result.Id);
                 await _channel.BasicAckAsync(ea.DeliveryTag, false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to process message. DeliveryTag: {DeliveryTag}. Requeueing.", ea.DeliveryTag);
+                logger.LogError(
+                    ex,
+                    "Failed to process message. DeliveryTag: {DeliveryTag}. Requeueing.",
+                    ea.DeliveryTag
+                );
                 await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
             }
         };
@@ -105,7 +107,7 @@ public class InvoiceConsumer(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error closing RabbitMQ channel.");
+            logger.LogError(ex, "Error closing RabbitMQ channel.");
         }
     }
 

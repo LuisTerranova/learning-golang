@@ -25,11 +25,11 @@ public class Invoice
 
     public decimal? Total { get; set; }
 
-    public List<ParsedItem> Items { get; set; } = new();
+    public List<ParsedItem>? Items { get; set; }
 
     public string ParserVersion { get; set; } = string.Empty;
 
     public bool IsValid { get; set; }
 
-    public List<string> ParseErrors { get; set; } = new();
+    public List<string>? ParseErrors { get; set; }
 }
