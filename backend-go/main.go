@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/LuisTerranova/invoices-app/backend-go/internal/imaging"
 	"github.com/LuisTerranova/invoices-app/backend-go/internal/messaging"
 	"github.com/LuisTerranova/invoices-app/backend-go/internal/ocr"
 	"github.com/LuisTerranova/invoices-app/backend-go/internal/parser"
@@ -14,7 +15,12 @@ import (
 )
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672")
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == "" {
+		rabbitURL = "amqp://guest:guest@localhost:5672"
+	}
+
+	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,7 +64,14 @@ func main() {
 				return
 			}
 
-			extractedText, ocrErr := ocr.ExtractText(raw.ImageData)
+			processedImage, procErr := imaging.PrepareForOCR(raw.ImageData)
+			if procErr != nil {
+				log.Printf("Image processing error: %v", procErr)
+				delivery.Nack(false, true)
+				return
+			}
+
+			extractedText, ocrErr := ocr.ExtractText(processedImage)
 			if ocrErr != nil {
 				log.Printf("OCR error: %v", ocrErr)
 				delivery.Nack(false, true)
@@ -67,7 +80,11 @@ func main() {
 
 			result := parser.Parse(extractedText, raw.ID)
 
-			messaging.PublishParsedInvoice(ch, result)
+			if err := messaging.PublishParsedInvoice(ch, result); err != nil {
+				log.Printf("Failed to publish parsed invoice %s: %v", result.ID, err)
+				delivery.Nack(false, true)
+				return
+			}
 
 			delivery.Ack(false)
 		}(d)

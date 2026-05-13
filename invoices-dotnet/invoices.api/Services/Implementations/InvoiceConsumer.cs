@@ -5,49 +5,55 @@ using System.Threading;
 using System.Threading.Tasks;
 using invoices.core.Models;
 using invoices.core.Services.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace invoices.api.Services.Implementations;
 
-public class InvoiceConsumer(IChannel channel) : BackgroundService, IInvoiceConsumer
+public class InvoiceConsumer(
+    IConnection _connection,
+    IServiceScopeFactory _scopeFactory,
+    JsonSerializerOptions _jsonOptions,
+    ILogger<InvoiceConsumer> _logger) : BackgroundService, IInvoiceConsumer
 {
     private readonly string _queueName = "processed_invoices";
+    private IChannel? _channel;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await StartListeningAsync();
 
-        // Register a callback to close the channel as soon as the service starts stopping
-        await using var reg = stoppingToken.Register(() =>
+        stoppingToken.Register(() =>
         {
-            Console.WriteLine("Shutting down InvoiceConsumer...");
+            _logger.LogInformation("Shutting down InvoiceConsumer...");
             StopListening();
         });
 
         try
         {
-            // Wait until the stoppingToken is triggered (e.g., app shutdown)
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
         catch (OperationCanceledException)
         {
-            // Expected during a graceful shutdown
-            Console.WriteLine("InvoiceConsumer stopped gracefully.");
+            _logger.LogInformation("InvoiceConsumer stopped gracefully.");
         }
     }
 
     public async Task StartListeningAsync()
     {
-        await channel.QueueDeclareAsync(
+        _channel = await _connection.CreateChannelAsync();
+
+        await _channel.QueueDeclareAsync(
             queue: _queueName,
             durable: true,
             exclusive: false,
             autoDelete: false
         );
 
-        var consumer = new AsyncEventingBasicConsumer(channel);
+        var consumer = new AsyncEventingBasicConsumer(_channel);
 
         consumer.ReceivedAsync += async (_, ea) =>
         {
@@ -56,41 +62,50 @@ public class InvoiceConsumer(IChannel channel) : BackgroundService, IInvoiceCons
 
             try
             {
-                var result = JsonSerializer.Deserialize<Invoice>(message);
+                var result = JsonSerializer.Deserialize<Invoice>(message, _jsonOptions);
 
                 if (result is null)
                 {
-                    Console.WriteLine("Received message is either null or invalid.");
-                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                    _logger.LogWarning("Received message is either null or invalid. DeliveryTag: {DeliveryTag}", ea.DeliveryTag);
+                    await _channel.BasicAckAsync(ea.DeliveryTag, false);
                     return;
                 }
 
-                // TODO: Save in postgres
+                result.Items ??= new();
+                result.ParseErrors ??= new();
 
-                await channel.BasicAckAsync(ea.DeliveryTag, false);
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var repo = scope.ServiceProvider.GetRequiredService<IInvoiceRepository>();
+                    await repo.AddAsync(result, CancellationToken.None);
+                    await repo.SaveChangesAsync(CancellationToken.None);
+                }
+
+                _logger.LogInformation("Successfully processed invoice {InvoiceId}.", result.Id);
+                await _channel.BasicAckAsync(ea.DeliveryTag, false);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // In case of error, the message returns to the queue (requeue: true)
-                await channel.BasicNackAsync(ea.DeliveryTag, false, true);
+                _logger.LogError(ex, "Failed to process message. DeliveryTag: {DeliveryTag}. Requeueing.", ea.DeliveryTag);
+                await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
             }
         };
 
-        await channel.BasicConsumeAsync(queue: _queueName, autoAck: false, consumer: consumer);
+        await _channel.BasicConsumeAsync(queue: _queueName, autoAck: false, consumer: consumer);
     }
 
     public void StopListening()
     {
         try
         {
-            if (channel.IsOpen)
+            if (_channel is { IsOpen: true })
             {
-                channel.CloseAsync().GetAwaiter().GetResult();
+                _channel.CloseAsync().GetAwaiter().GetResult();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error closing RabbitMQ channel: {ex.Message}");
+            _logger.LogError(ex, "Error closing RabbitMQ channel.");
         }
     }
 

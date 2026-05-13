@@ -1,17 +1,21 @@
 services:
   rabbitmq:
-    # tag '-management' for visual panel
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
     ports:
-      - "5672:5672"   # comms port
-      - "15672:15672" # browser panel port
+      - "5672:5672"
+      - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_running
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:18-alpine
@@ -25,6 +29,47 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  invoices-api:
+    build:
+      context: ./invoices-dotnet
+      dockerfile: invoices.api/Dockerfile
+    container_name: invoices-api
+    restart: always
+    ports:
+      - "5152:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=invoices_db;Username=postgres;Password=postgrespassword
+      - RabbitMQ__HostName=rabbitmq
+      - ASPNETCORE_ENVIRONMENT=Development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/invoices/count"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  invoices-ocr:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile
+    container_name: invoices-ocr
+    restart: always
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   rabbitmq_data:

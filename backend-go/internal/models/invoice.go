@@ -37,7 +37,7 @@ type ParsedItem struct {
 
 func (p *ParsedInvoice) Validate() {
 	p.IsValid = true
-	p.ParseErrors = nil
+	p.ParseErrors = make([]string, 0)
 
 	if p.CNPJ == nil {
 		p.IsValid = false

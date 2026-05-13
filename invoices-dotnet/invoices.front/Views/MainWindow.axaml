@@ -1,20 +1,51 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:invoices.front.ViewModels"
+        xmlns:views="using:invoices.front.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="invoices.front.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="invoices.front">
+        Title="Invoice Manager">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <Grid ColumnDefinitions="220,*">
+        <Border Grid.Column="0" Background="#1E1E2E">
+            <StackPanel Spacing="4" Margin="12">
+                <TextBlock Text="Invoice Manager" FontSize="18" FontWeight="Bold"
+                           Foreground="White" Margin="0,0,0,16"/>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Button Content="Invoices"
+                        Command="{Binding NavigateToInvoicesCommand}"
+                        HorizontalAlignment="Stretch"
+                        Background="Transparent"
+                        Foreground="#CDD6F4"
+                        FontSize="14"
+                        Height="36"/>
 
+                <Button Content="Upload Invoice"
+                        Command="{Binding NavigateToUploadCommand}"
+                        HorizontalAlignment="Stretch"
+                        Background="Transparent"
+                        Foreground="#CDD6F4"
+                        FontSize="14"
+                        Height="36"/>
+            </StackPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" Content="{Binding ActiveViewModel}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="vm:InvoiceListViewModel">
+                    <views:InvoiceListView/>
+                </DataTemplate>
+                <DataTemplate DataType="vm:InvoiceDetailViewModel">
+                    <views:InvoiceDetailView/>
+                </DataTemplate>
+                <DataTemplate DataType="vm:InvoiceUploadViewModel">
+                    <views:InvoiceUploadView/>
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
+    </Grid>
 </Window>

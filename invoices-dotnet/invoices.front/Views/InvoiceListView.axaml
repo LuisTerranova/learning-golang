@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:invoices.front.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="invoices.front.Views.InvoiceListView"
+             x:DataType="vm:InvoiceListViewModel"
+             x:CompileBindings="False">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="24">
+        <TextBox Grid.Row="0" Text="{Binding SearchText}"
+                 PlaceholderText="Search by establishment, CNPJ, or access key..."
+                 Margin="0,0,0,12">
+            <TextBox.InnerRightContent>
+                <Button Content="Search" Command="{Binding SearchCommand}"
+                        VerticalAlignment="Center"/>
+            </TextBox.InnerRightContent>
+        </TextBox>
+
+        <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}"
+                   Foreground="Red" Margin="0,0,0,8"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Invoices}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  Margin="0,0,0,8">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Establishment"
+                    Binding="{Binding Establishment}" Width="2*"/>
+                <DataGridTextColumn Header="CNPJ"
+                    Binding="{Binding Cnpj}" Width="*"/>
+                <DataGridTextColumn Header="Date"
+                    Binding="{Binding Date}" Width="*"/>
+                <DataGridTextColumn Header="Total"
+                    Binding="{Binding Total}" Width="*"/>
+                <DataGridTextColumn Header="Valid"
+                    Binding="{Binding IsValid}" Width="Auto"/>
+                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Details"
+                                    Command="{Binding $parent[UserControl].DataContext.OpenDetailCommand}"
+                                    CommandParameter="{Binding Id}"
+                                    Margin="4"
+                                    Padding="12,4"
+                                    Cursor="Hand"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+            <Button Content="Previous"
+                    Command="{Binding GoToPreviousPageCommand}"
+                    IsEnabled="{Binding CanGoToPrevious}"/>
+            <TextBlock VerticalAlignment="Center">
+                <Run Text="Page "/><Run Text="{Binding CurrentPage}"/>
+                <Run Text=" of "/><Run Text="{Binding TotalPages}"/>
+            </TextBlock>
+            <Button Content="Next"
+                    Command="{Binding GoToNextPageCommand}"
+                    IsEnabled="{Binding CanGoToNext}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

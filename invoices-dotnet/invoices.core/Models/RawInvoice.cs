@@ -8,9 +8,11 @@ public class RawInvoice
     public Guid Id { get; set; } = Guid.NewGuid();
 
     [JsonIgnore]
-    public string FileName { get; set; }
-    public byte[] ImageData { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string FileName { get; set; } = string.Empty;
+
+    public byte[] ImageData { get; set; } = [];
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     [JsonIgnore]
     public Invoice? ParsedInvoice { get; set; }

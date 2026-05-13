@@ -2,4 +2,5 @@
   <Project Path="invoices.api/invoices.api.csproj" />
   <Project Path="invoices.core/invoices.core.csproj" />
   <Project Path="invoices.front/invoices.front.csproj" />
+  <Project Path="invoices.tests/invoices.tests.csproj" />
 </Solution>

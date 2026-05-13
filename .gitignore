@@ -1,20 +1,38 @@
-# --- GERADOS PELO BUF ---
-backend-go/gen/
-frontend-avalonia/Generated/
-
 # --- GOLANG (backend-go) ---
+backend-go/backend-go
 backend-go/bin/
 backend-go/vendor/
 
-# --- .NET / AVALONIA (frontend-avalonia) ---
+# --- .NET / AVALONIA ---
 **/bin/
 **/obj/
 *.user
 *.suo
 *.sln.dotSettings.user
-frontend-avalonia/.vs/
+*.csproj.user
+
+# ASP.NET Core user secrets (local dev)
+**/Properties/launchSettings.json
+**/appsettings.Development.json
+**/appsettings.*.local.json
+**/secrets.json
 
 # --- IDEs & EDITORES ---
 .idea/
 .vscode/
 .netrw*
+
+# --- Docker ---
+**/.dockerignore
+
+# --- Node / JS (frontends, scripts) ---
+node_modules/
+
+# --- OS artifacts ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- Config templates ---
+*.example.*

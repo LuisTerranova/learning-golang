@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:invoices.front.ViewModels"
+        x:Class="invoices.front.Views.LoginWindow"
+        x:DataType="vm:LoginViewModel"
+        Title="Invoice OCR - Login"
+        Width="380" Height="240"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False">
+    <Grid RowDefinitions="*,Auto" Margin="20">
+        <StackPanel Grid.Row="0" Spacing="12" VerticalAlignment="Center">
+            <TextBlock Text="Invoice OCR System"
+                       FontSize="18" FontWeight="Bold"
+                       HorizontalAlignment="Center"/>
+
+            <TextBox PlaceholderText="Username"
+                     Text="{Binding Username}" />
+
+            <TextBox PlaceholderText="Password"
+                     Text="{Binding Password}"
+                     PasswordChar="●" />
+
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="Red" FontSize="12" />
+
+             <Button Content="Login"
+                     Command="{Binding LoginCommand}"
+                     IsEnabled="{Binding !IsLoading}"
+                    HorizontalAlignment="Stretch"/>
+        </StackPanel>
+    </Grid>
+</Window>
