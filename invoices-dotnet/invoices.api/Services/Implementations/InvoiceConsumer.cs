@@ -1,7 +1,9 @@
 using System.Text;
 using System.Text.Json;
+using invoices.api.Data.Context;
 using invoices.core.Models;
 using invoices.core.Services.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -74,7 +76,29 @@ public class InvoiceConsumer(
 
                 using (var scope = scopeFactory.CreateScope())
                 {
+                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                     var repo = scope.ServiceProvider.GetRequiredService<IInvoiceRepository>();
+
+                    if (!string.IsNullOrWhiteSpace(result.RawCnpj) || !string.IsNullOrWhiteSpace(result.RawEstablishment))
+                    {
+                        var est = await db.Establishments.FirstOrDefaultAsync(e => 
+                            (!string.IsNullOrWhiteSpace(result.RawCnpj) && e.Cnpj == result.RawCnpj) || 
+                            (!string.IsNullOrWhiteSpace(result.RawEstablishment) && e.Name == result.RawEstablishment), CancellationToken.None);
+                        
+                        if (est == null)
+                        {
+                            est = new Establishment 
+                            { 
+                                Name = string.IsNullOrWhiteSpace(result.RawEstablishment) ? "Unknown" : result.RawEstablishment, 
+                                Cnpj = result.RawCnpj 
+                            };
+                            await db.Establishments.AddAsync(est, CancellationToken.None);
+                        }
+                        
+                        result.EstablishmentId = est.Id;
+                        result.Establishment = est;
+                    }
+
                     await repo.AddAsync(result, CancellationToken.None);
                     await repo.SaveChangesAsync(CancellationToken.None);
                 }

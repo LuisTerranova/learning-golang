@@ -17,11 +17,20 @@ public class Invoice
 
     public string? AccessKey { get; set; }
 
-    public string? Establishment { get; set; }
+    public Guid? EstablishmentId { get; set; }
 
-    public string? Cnpj { get; set; }
+    [JsonPropertyName("establishment_details")]
+    public Establishment? Establishment { get; set; }
 
-    public DateTimeOffset? Date { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    [JsonPropertyName("establishment")]
+    public string? RawEstablishment { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    [JsonPropertyName("cnpj")]
+    public string? RawCnpj { get; set; }
+
+    public DateTime? Date { get; set; }
 
     public decimal? Total { get; set; }
 

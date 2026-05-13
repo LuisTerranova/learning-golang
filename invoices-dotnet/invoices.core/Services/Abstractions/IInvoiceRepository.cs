@@ -13,11 +13,13 @@ public interface IInvoiceRepository
         string? search = null,
         string? sortBy = null,
         bool ascending = false,
+        int? year = null,
+        int? month = null,
         CancellationToken ct = default);
 
     Task<Invoice?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
-    Task<int> GetCountAsync(string? search = null, CancellationToken ct = default);
+    Task<int> GetCountAsync(string? search = null, int? year = null, int? month = null, CancellationToken ct = default);
 
     Task AddAsync(Invoice invoice, CancellationToken ct = default);
 
@@ -27,6 +29,8 @@ public interface IInvoiceRepository
 
     Task DeleteAsync(Invoice invoice, CancellationToken ct = default);
 
+    Task DeleteManyAsync(List<Guid> ids, CancellationToken ct = default);
+
     Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
 
     Task AddRawInvoiceAsync(RawInvoice rawInvoice, CancellationToken ct = default);
@@ -34,4 +38,8 @@ public interface IInvoiceRepository
     Task<RawInvoice?> GetRawInvoiceByInvoiceIdAsync(Guid invoiceId, CancellationToken ct = default);
 
     Task SaveChangesAsync(CancellationToken ct = default);
+
+    Task<List<YearMonthGroup>> GetGroupsAsync(CancellationToken ct = default);
+
+    Task<List<Invoice>> GetByMonthAsync(int year, int month, CancellationToken ct = default);
 }

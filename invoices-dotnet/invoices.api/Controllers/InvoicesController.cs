@@ -16,10 +16,12 @@ public class InvoicesController(IInvoiceService invoiceService, IInvoiceReposito
         [FromQuery] string? search = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] bool ascending = false,
+        [FromQuery] int? year = null,
+        [FromQuery] int? month = null,
         CancellationToken ct = default
     )
     {
-        return await invoiceService.GetAllAsync(page, pageSize, search, sortBy, ascending, ct);
+        return await invoiceService.GetAllAsync(page, pageSize, search, sortBy, ascending, year, month, ct);
     }
 
     [HttpGet("{id:guid}")]
@@ -36,10 +38,12 @@ public class InvoicesController(IInvoiceService invoiceService, IInvoiceReposito
     [HttpGet("count")]
     public async Task<ActionResult<int>> GetCount(
         [FromQuery] string? search = null,
+        [FromQuery] int? year = null,
+        [FromQuery] int? month = null,
         CancellationToken ct = default
     )
     {
-        return await invoiceService.GetCountAsync(search, ct);
+        return await invoiceService.GetCountAsync(search, year, month, ct);
     }
 
     [HttpDelete("{id:guid}")]
@@ -54,6 +58,28 @@ public class InvoicesController(IInvoiceService invoiceService, IInvoiceReposito
         {
             return NotFound();
         }
+    }
+
+    [HttpPost("batch-delete")]
+    public async Task<IActionResult> DeleteMany([FromBody] BatchDeleteRequest request, CancellationToken ct = default)
+    {
+        await invoiceService.DeleteManyAsync(request.Ids, ct);
+        return NoContent();
+    }
+
+    [HttpGet("groups")]
+    public async Task<ActionResult<List<YearMonthGroup>>> GetGroups(CancellationToken ct = default)
+    {
+        return await invoiceService.GetGroupsAsync(ct);
+    }
+
+    [HttpGet("by-month")]
+    public async Task<ActionResult<List<Invoice>>> GetByMonth(
+        [FromQuery] int year,
+        [FromQuery] int month,
+        CancellationToken ct = default)
+    {
+        return await invoiceService.GetByMonthAsync(year, month, ct);
     }
 
     [HttpPut("{id:guid}")]

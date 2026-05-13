@@ -87,6 +87,7 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services
+builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHostedService<InvoiceConsumer>();
@@ -143,7 +144,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    if (db.Database.IsNpgsql())
+    {
+        await db.Database.MigrateAsync();
+    }
+    else
+    {
+        await db.Database.EnsureCreatedAsync();
+    }
     await SeedData.InitializeAsync(db);
 }
 
@@ -152,3 +160,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

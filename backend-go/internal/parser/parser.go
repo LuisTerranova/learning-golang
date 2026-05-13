@@ -197,8 +197,19 @@ func parseItems(lines []string) []models.ParsedItem {
 
 func parseBrazilianFloat(s string) *float64 {
 	clean := strings.ReplaceAll(s, " ", "")
-	clean = strings.ReplaceAll(clean, ".", "")
-	clean = strings.ReplaceAll(clean, ",", ".")
+
+	commaIdx := strings.Index(clean, ",")
+	dotIdx := strings.Index(clean, ".")
+
+	if commaIdx >= 0 {
+		// Comma is decimal separator — dots are thousands
+		clean = strings.ReplaceAll(clean, ".", "")
+		clean = strings.ReplaceAll(clean, ",", ".")
+	} else if dotIdx >= 0 && strings.Count(clean, ".") == 1 {
+		// Single dot with no comma — dot is the decimal separator
+		// Already correct, just parse as-is
+	}
+
 	value, err := strconv.ParseFloat(clean, 64)
 	if err != nil {
 		return nil

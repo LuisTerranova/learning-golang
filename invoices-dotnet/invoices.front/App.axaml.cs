@@ -10,6 +10,7 @@ using invoices.front.Services.Abstractions;
 using invoices.front.Services.Implementations;
 using invoices.front.ViewModels;
 using invoices.front.Views;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace invoices.front;
@@ -50,6 +51,8 @@ public partial class App : Application
         services.AddSingleton<AuthTokenHandler>();
 
         services.AddScoped<IInvoiceService, HttpInvoiceService>();
+        services.AddScoped<IEstablishmentService, HttpEstablishmentService>();
+        services.AddScoped<IInvoiceExportService, ExcelExportService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<InvoiceListViewModel>();

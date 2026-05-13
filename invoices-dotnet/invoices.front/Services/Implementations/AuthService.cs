@@ -144,7 +144,7 @@ public class AuthService : IAuthClient
         var exp = GetTokenExpiry(token);
         if (exp == null) return;
 
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
         var lifetime = exp.Value - now;
         if (lifetime <= TimeSpan.Zero) return;
 
@@ -169,7 +169,7 @@ public class AuthService : IAuthClient
         });
     }
 
-    private static DateTimeOffset? GetTokenExpiry(string token)
+    private static DateTime? GetTokenExpiry(string token)
     {
         var parts = token.Split('.');
         if (parts.Length < 2) return null;
@@ -188,7 +188,7 @@ public class AuthService : IAuthClient
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("exp", out var expProp))
             {
-                return DateTimeOffset.FromUnixTimeSeconds(expProp.GetInt64());
+                return DateTime.UnixEpoch.AddSeconds(expProp.GetInt64());
             }
         }
         catch

@@ -22,6 +22,37 @@ namespace invoices.api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("invoices.core.Models.Establishment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Cnpj")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Cnpj");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Establishments");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "establishment_details");
+                });
+
             modelBuilder.Entity("invoices.core.Models.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -32,22 +63,17 @@ namespace invoices.api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Cnpj")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTimeOffset?>("Date")
+                    b.Property<DateTime?>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Establishment")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                    b.Property<Guid?>("EstablishmentId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsValid")
                         .HasColumnType("boolean");
 
                     b.Property<string>("ParseErrors")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<string>("ParserVersion")
                         .IsRequired()
@@ -68,9 +94,9 @@ namespace invoices.api.Migrations
                     b.HasIndex("AccessKey")
                         .IsUnique();
 
-                    b.HasIndex("Cnpj");
-
                     b.HasIndex("Date");
+
+                    b.HasIndex("EstablishmentId");
 
                     b.HasIndex("RawId")
                         .IsUnique();
@@ -84,7 +110,7 @@ namespace invoices.api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -109,10 +135,10 @@ namespace invoices.api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("ExpiresAt")
+                    b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsRevoked")
@@ -138,7 +164,7 @@ namespace invoices.api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -167,6 +193,11 @@ namespace invoices.api.Migrations
 
             modelBuilder.Entity("invoices.core.Models.Invoice", b =>
                 {
+                    b.HasOne("invoices.core.Models.Establishment", "Establishment")
+                        .WithMany()
+                        .HasForeignKey("EstablishmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("invoices.core.Models.RawInvoice", "RawInvoice")
                         .WithOne("ParsedInvoice")
                         .HasForeignKey("invoices.core.Models.Invoice", "RawId")
@@ -206,6 +237,8 @@ namespace invoices.api.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("InvoiceId");
                         });
+
+                    b.Navigation("Establishment");
 
                     b.Navigation("Items");
 

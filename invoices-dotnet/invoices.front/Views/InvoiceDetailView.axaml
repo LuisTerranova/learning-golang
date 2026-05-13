@@ -28,11 +28,11 @@
                         </Grid>
                         <Grid ColumnDefinitions="120,*" Margin="0,0,0,4">
                             <TextBlock Text="Establishment:" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Invoice.Establishment}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Invoice.Establishment.Name}"/>
                         </Grid>
                         <Grid ColumnDefinitions="120,*" Margin="0,0,0,4">
                             <TextBlock Text="CNPJ:" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Invoice.Cnpj}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Invoice.Establishment.Cnpj}"/>
                         </Grid>
                         <Grid ColumnDefinitions="120,*" Margin="0,0,0,4">
                             <TextBlock Text="Access Key:" FontWeight="SemiBold"/>
@@ -55,7 +55,13 @@
                     <StackPanel IsVisible="{Binding IsEditing}">
                         <Grid ColumnDefinitions="120,*" Margin="0,0,0,4">
                             <TextBlock Text="Establishment:" FontWeight="SemiBold"/>
-                            <TextBox Grid.Column="1" Text="{Binding EditEstablishment}" PlaceholderText="Establishment"/>
+                            <AutoCompleteBox Grid.Column="1" 
+                                             Text="{Binding EditEstablishment}" 
+                                             ItemsSource="{Binding EstablishmentSuggestions}"
+                                             SelectedItem="{Binding SelectedEstablishment}"
+                                             ValueMemberBinding="{Binding Name}"
+                                             FilterMode="None"
+                                             PlaceholderText="Establishment"/>
                         </Grid>
                         <Grid ColumnDefinitions="120,*" Margin="0,0,0,4">
                             <TextBlock Text="CNPJ:" FontWeight="SemiBold"/>
@@ -71,10 +77,22 @@
                         </Grid>
                     </StackPanel>
 
-                    <TextBlock Text="Items" FontSize="16" FontWeight="SemiBold" Margin="0,16,0,4"/>
-                    <DataGrid ItemsSource="{Binding Invoice.Items}"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              MaxHeight="200">
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,4">
+                        <TextBlock Text="Items" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="+ Add Item"
+                                Command="{Binding AddItemCommand}"
+                                IsVisible="{Binding IsEditing}"
+                                Margin="0,0,8,0"/>
+                        <Button Grid.Column="2" Content="Remove Selected"
+                                Command="{Binding RemoveItemCommand}"
+                                IsVisible="{Binding IsEditing}"/>
+                    </Grid>
+
+                    <DataGrid ItemsSource="{Binding EditableItems}"
+                              SelectedItem="{Binding SelectedItem}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="{Binding !IsEditing}"
+                              MaxHeight="250">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
                             <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="Auto"/>

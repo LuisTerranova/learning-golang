@@ -16,7 +16,7 @@ public static class SeedData
                 Username = "admin",
                 Email = "admin@email.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                CreatedAt = DateTimeOffset.UtcNow,
+                CreatedAt = DateTime.UtcNow,
             }
         );
 

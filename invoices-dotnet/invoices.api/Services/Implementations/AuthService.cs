@@ -44,7 +44,7 @@ public class AuthService(IUserRepository userRepo, IConfiguration config, AppDbC
         if (
             storedToken is null
             || storedToken.IsRevoked
-            || storedToken.ExpiresAt <= DateTimeOffset.UtcNow
+            || storedToken.ExpiresAt <= DateTime.UtcNow
         )
         {
             return new AuthResult(false, null, null, null, "Invalid or expired refresh token.");
@@ -116,7 +116,7 @@ public class AuthService(IUserRepository userRepo, IConfiguration config, AppDbC
         {
             Token = Convert.ToBase64String(randomBytes),
             UserId = userId,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
             IsRevoked = false,
         };
     }
