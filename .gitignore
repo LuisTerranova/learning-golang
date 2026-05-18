@@ -36,3 +36,6 @@ Thumbs.db
 
 # --- Config templates ---
 *.example.*
+
+# Graphify generated artifacts
+graphify-out/
